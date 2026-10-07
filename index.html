@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AcxiomCRM</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+body{background:#f1f4f9;font-family:'Segoe UI',system-ui,sans-serif;font-size:.92rem;color:#1e2a44}
+#side{position:fixed;inset:0 auto 0 0;width:250px;background:linear-gradient(180deg,#0b1f4b,#13306e);z-index:1040;transition:transform .25s;overflow-y:auto}
+#side .brand{padding:1.25rem 1.3rem;color:#fff;font-weight:700;font-size:1.3rem;letter-spacing:.5px}
+#side a{display:flex;gap:.75rem;align-items:center;padding:.65rem 1.3rem;color:#cbd5e8;text-decoration:none;border-left:3px solid transparent;transition:.15s}
+#side a:hover{background:rgba(255,255,255,.08);color:#fff}
+#side a.active{background:rgba(255,255,255,.14);color:#fff;border-left-color:#4d9bff}
+#main{margin-left:250px;min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid #e3e8f0;position:sticky;top:0;z-index:1020}
+.card{border:0;border-radius:12px}
+.kpi{transition:.2s}.kpi:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(11,31,75,.14)!important}
+.kic{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem}
+.table thead th{background:#f7f9fc;font-size:.76rem;text-transform:uppercase;letter-spacing:.4px;color:#5b6b86;white-space:nowrap;cursor:pointer}
+.kanban{display:grid;grid-template-columns:repeat(5,minmax(235px,1fr));gap:1rem;overflow-x:auto;padding-bottom:.5rem}
+.kcol{background:#e6ecf6;border-radius:12px;padding:.75rem;min-height:220px}
+.kcard{background:#fff;border-radius:10px;padding:.7rem;margin-bottom:.6rem;box-shadow:0 1px 3px rgba(0,0,0,.1);transition:.15s}.kcard:hover{box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.tl{border-left:2px solid #d5dcea;margin-left:18px;padding-left:30px}.tli{position:relative}
+.tld{position:absolute;left:-48px;top:6px;width:34px;height:34px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center}
+#auth{min-height:100vh;background:linear-gradient(135deg,#0b1f4b,#1f5fd6)}
+.demo{cursor:pointer}.demo:hover{background:#eef3fc}
+@media(max-width:991px){#side{transform:translateX(-100%)}#side.open{transform:none}#main{margin-left:0}}
+</style>
+</head>
+<body>
+<div id="auth" class="d-none d-flex align-items-center justify-content-center p-3">
+ <div class="row g-0 shadow-lg rounded-4 overflow-hidden bg-white" style="max-width:900px;width:100%">
+  <div class="col-md-5 p-4 text-white d-none d-md-flex flex-column justify-content-center" style="background:#0b1f4b">
+   <h2 class="fw-bold"><i class="bi bi-diagram-3-fill"></i> AcxiomCRM</h2>
+   <p class="opacity-75">Leads, customers, pipeline and follow-ups in one workspace.</p>
+   <div class="small opacity-75"><div class="mb-2"><i class="bi bi-shield-check"></i> Role-based access</div><div class="mb-2"><i class="bi bi-graph-up-arrow"></i> Live sales analytics</div><div><i class="bi bi-journal-text"></i> Complete audit trail</div></div>
+  </div>
+  <div class="col-md-7 p-4 p-lg-5">
+   <ul class="nav nav-pills mb-4"><li class="nav-item"><button class="nav-link active" id="tl" onclick="tab(1)">Sign in</button></li><li class="nav-item"><button class="nav-link" id="tr" onclick="tab(0)">Register</button></li></ul>
+   <form id="lf" onsubmit="login(event)" novalidate>
+    <div class="alert alert-danger py-2 d-none" id="lerr"></div>
+    <div class="mb-3"><label class="form-label">Email</label><input id="le" type="email" class="form-control" placeholder="you@acxiom.com"></div>
+    <div class="mb-3"><label class="form-label">Password</label><input id="lp" type="password" class="form-control"></div>
+    <button class="btn btn-primary w-100 mb-3">Sign in</button>
+    <div class="small text-muted mb-1">Demo accounts (click to fill):</div>
+    <div class="list-group small">
+     <a class="list-group-item demo" onclick="fill('admin@acxiom.com','admin123')"><b>Admin</b> · admin@acxiom.com / admin123</a>
+     <a class="list-group-item demo" onclick="fill('manager@acxiom.com','manager123')"><b>Manager</b> · manager@acxiom.com / manager123</a>
+     <a class="list-group-item demo" onclick="fill('sales@acxiom.com','sales123')"><b>Sales Executive</b> · sales@acxiom.com / sales123</a>
+    </div>
+   </form>
+   <form id="rf" class="d-none" onsubmit="reg(event)" novalidate>
+    <div class="mb-3"><label class="form-label">Full name</label><input id="rn" class="form-control"><div class="invalid-feedback"></div></div>
+    <div class="mb-3"><label class="form-label">Email</label><input id="re" type="email" class="form-control"><div class="invalid-feedback"></div></div>
+    <div class="mb-3"><label class="form-label">Password</label><input id="rp" type="password" class="form-control"><div class="invalid-feedback"></div></div>
+    <div class="mb-3"><label class="form-label">Confirm password</label><input id="rc" type="password" class="form-control"><div class="invalid-feedback"></div></div>
+    <button class="btn btn-primary w-100">Create account</button>
+    <div class="small text-muted mt-2">New accounts are created as Sales Executive.</div>
+   </form>
+  </div>
+ </div>
+</div>
+
+<div id="app" class="d-none">
+ <aside id="side"><div class="brand"><i class="bi bi-diagram-3-fill text-info"></i> AcxiomCRM</div><nav id="nav"></nav></aside>
+ <div id="main">
+  <header class="topbar d-flex align-items-center justify-content-between px-3 py-2">
+   <div class="d-flex align-items-center gap-3"><button class="btn btn-light d-lg-none" onclick="$('#side').classList.toggle('open')"><i class="bi bi-list"></i></button>
+    <nav><ol class="breadcrumb mb-0"><li class="breadcrumb-item">AcxiomCRM</li><li class="breadcrumb-item active" id="crumb"></li></ol></nav></div>
+   <div class="d-flex align-items-center gap-3">
+    <div class="dropdown"><button class="btn btn-light position-relative" data-bs-toggle="dropdown"><i class="bi bi-bell"></i><span id="bc" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"></span></button><div class="dropdown-menu dropdown-menu-end p-2" style="min-width:270px" id="bl"></div></div>
+    <div class="dropdown"><button class="btn btn-light d-flex align-items-center gap-2" data-bs-toggle="dropdown"><i class="bi bi-person-circle fs-5"></i><span class="text-start lh-1"><span id="un" class="fw-semibold d-block"></span><small id="ur" class="text-muted"></small></span></button>
+     <ul class="dropdown-menu dropdown-menu-end"><li><span class="dropdown-item-text small text-muted" id="ue"></span></li><li><hr class="dropdown-divider"></li><li><a class="dropdown-item" href="#" onclick="logout();return false"><i class="bi bi-box-arrow-right"></i> Logout</a></li></ul></div>
+   </div>
+  </header>
+  <main class="p-3 p-lg-4"><div id="view"></div><div class="text-center text-muted small mt-4">© AcxiomCRM · Sales workspace</div></main>
+ </div>
+</div>
+
+<div class="modal fade" id="m" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable modal-lg" id="md"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="mt"></h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body" id="mb"></div><div class="modal-footer" id="mf"></div></div></div></div>
+<div class="modal fade" id="cm" tabindex="-1"><div class="modal-dialog modal-sm modal-dialog-centered"><div class="modal-content"><div class="modal-body text-center p-4"><i class="bi bi-exclamation-triangle text-warning fs-1"></i><h6 class="mt-2">Please confirm</h6><div id="cmb" class="small text-muted mb-3"></div><button class="btn btn-light" data-bs-dismiss="modal">Cancel</button> <button class="btn btn-danger" id="cmy">Confirm</button></div></div></div></div>
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:2000" id="ts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const get=k=>JSON.parse(localStorage.getItem('acx_'+k)||'null'),put=(k,v)=>localStorage.setItem('acx_'+k,JSON.stringify(v)),D=k=>get(k)||[];
+const ld=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const day=(o=0)=>{const d=new Date();d.setDate(d.getDate()+o);return ld(d)},now=()=>new Date().toISOString();
+const hash=s=>{let h=5381;for(const c of 'acx$'+s)h=(h*33^c.charCodeAt(0))>>>0;return 'H'+h.toString(36)};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const strip=s=>String(s).replace(/<[^>]*>/g,''),fmt=n=>'₹'+Number(n||0).toLocaleString('en-IN'),sum=(a,k)=>a.reduce((t,x)=>t+(+x[k]||0),0);
+const nid=a=>a.reduce((m,x)=>Math.max(m,x.id),0)+1,nm=(c,id)=>(D(c).find(x=>x.id==id)||{}).name||'—';
+const cmp=(a,b)=>typeof a=='number'&&typeof b=='number'?a-b:String(a??'').localeCompare(String(b??''),undefined,{numeric:true});
+const ST=['Qualification','Proposal','Negotiation','Won','Lost'],PR={Qualification:20,Proposal:45,Negotiation:70,Won:100,Lost:0};
+const LS=['New','Contacted','Qualified','Unqualified','Converted','Lost'],NXT={New:'Contacted',Contacted:'Qualified'};
+const T={New:['Contacted','Unqualified','Lost'],Contacted:['Qualified','Unqualified','Lost'],Qualified:['Converted','Unqualified','Lost'],Unqualified:['New','Lost'],Lost:['New'],Converted:[]};
+const TY=['Call','Meeting','Email','Task'],TI={Call:'telephone',Meeting:'people',Email:'envelope',Task:'check2-square'},ALL=['Admin','Manager','Sales Executive'];
+const PAL=['#1f5fd6','#17a2b8','#f0ad4e','#28a745','#dc3545','#6f42c1'];
+const BC={Active:'success',Prospect:'info',Inactive:'secondary',New:'primary',Contacted:'info',Qualified:'success',Unqualified:'warning',Converted:'dark',Lost:'danger',High:'danger',Medium:'warning',Low:'secondary',Open:'primary',Won:'success',Planned:'primary',Completed:'success',Missed:'danger',Cancelled:'secondary','In Progress':'warning',Success:'success',Failed:'danger',Qualification:'secondary',Proposal:'info',Negotiation:'warning',Admin:'danger',Manager:'primary','Sales Executive':'info',Locked:'danger'};
+const badge=v=>v?`<span class="badge bg-${BC[v]||'secondary'}-subtle text-${BC[v]||'secondary'}-emphasis border border-${BC[v]||'secondary'}-subtle">${esc(v)}</span>`:'—';
+let me=get('currentUser'),cur='dashboard',CH=[],S={},cb,RES;
+
+/* ---------- seed data ---------- */
+function seed(){
+ if(get('seeded'))return;
+ const co=['Infosys','Tata Consultancy Services','Deloitte India','Wipro','Tech Mahindra','Accenture India','HCLTech','Cognizant','Capgemini India','Mphasis','LTIMindtree','Zensar Technologies','Persistent Systems','Hexaware','Birlasoft'];
+ const pn=['Rajesh Kumar','Anita Desai','Vikram Singh','Meera Krishnan','Suresh Patel','Kavita Rao','Amit Shah','Divya Menon','Karthik Subramanian','Pooja Verma','Rahul Bhatia','Neha Gupta','Sanjay Joshi','Lakshmi Narayan','Imran Khan'];
+ const ci=[['Bengaluru','Karnataka'],['Mumbai','Maharashtra'],['Hyderabad','Telangana'],['Chennai','Tamil Nadu'],['Pune','Maharashtra'],['Gurugram','Haryana'],['Kolkata','West Bengal'],['Noida','Uttar Pradesh'],['Visakhapatnam','Andhra Pradesh'],['Kochi','Kerala']];
+ const dom=c=>c.toLowerCase().replace(/[^a-z]/g,'').slice(0,12)+'.com',sales=[3,4,5];
+ const U=[['Admin User','admin@acxiom.com','admin123','Admin'],['Ravi Menon','manager@acxiom.com','manager123','Manager'],['Sneha Iyer','sales@acxiom.com','sales123','Sales Executive'],['Arjun Reddy','arjun@acxiom.com','sales123','Sales Executive'],['Priya Nair','priya@acxiom.com','sales123','Sales Executive']];
+ const us=U.map((u,i)=>({id:i+1,name:u[0],email:u[1],hash:hash(u[2]),role:u[3],status:'Active',last:new Date(Date.now()-i*864e5).toISOString(),created:day(-120-i*10),fails:0,lock:0}));put('users',us);
+ put('customers',pn.map((n,i)=>({id:i+1,code:'CUST-'+(1001+i),name:n,email:n.split(' ')[0].toLowerCase()+'@'+dom(co[i]),phone:'9'+String(800000001+i*7919231),company:co[i],address:(10+i*3)+', Tech Park Road',city:ci[i%10][0],state:ci[i%10][1],status:['Active','Active','Prospect','Active','Inactive'][i%5],created:day(-150+i*9),createdBy:1+i%2,assigned:sales[i%3],notes:''})));
+ const lc=['Reliance Retail','HDFC Bank','Flipkart','Zomato','Mahindra Logistics','Asian Paints','Bajaj Finserv',"Dr. Reddy's Labs",'Godrej Consumer','ICICI Lombard','Titan Company','Havells India','Apollo Hospitals','Larsen & Toubro','Sun Pharma'];
+ const ln=['Aditya Mehta','Shruti Kapoor','Nikhil Jain','Ritu Sharma','Manoj Pillai','Swati Banerjee','Harish Naidu','Deepa Iyer','Gaurav Malhotra','Sunita Reddy','Varun Chopra','Anjali Mishra','Prakash Nair','Tanvi Kulkarni','Rohan Bose'];
+ const lst=['New','Contacted','Qualified','New','Contacted','Qualified','Unqualified','Converted','Lost','New','Contacted','Qualified','Converted','New','Lost'];
+ put('leads',ln.map((n,i)=>({id:i+1,code:'LEAD-'+(2001+i),name:n,email:n.split(' ')[0].toLowerCase()+'@'+dom(lc[i]),phone:'8'+String(700000001+i*6131177),company:lc[i],source:['Website','Referral','LinkedIn','Trade Show','Cold Call','Email Campaign'][i%6],status:lst[i],priority:['High','Medium','Low'][i%3],value:(2+i%7)*150000+i*25000,created:day(-90+i*5),assigned:sales[i%3],notes:'Interested in enterprise solutions.'})));
+ const st=['Qualification','Proposal','Negotiation','Won','Lost','Proposal','Negotiation','Qualification','Won','Proposal','Won','Negotiation'];
+ const on=['ERP Modernization','Cloud Migration','Data Analytics Suite','CRM Rollout','Cybersecurity Audit','Mobile App Build','AI Chatbot','Managed Services','DevOps Platform','HR Portal','BI Dashboard','Network Upgrade'];
+ put('opportunities',st.map((s,i)=>({id:i+1,name:on[i]+' – '+co[i].split(' ')[0],customerId:i+1,leadId:i<8?i+1:'',amount:(3+i*2)*100000+i*37000,stage:s,prob:PR[s],close:s=='Won'?day(-[95,10,40][i%3]):s=='Lost'?day(-12):day(10+i*9),status:s=='Won'?'Won':s=='Lost'?'Lost':'Open',created:day(-100+i*7),assigned:sales[i%3],notes:''})));
+ const fs=['Planned','Planned','Completed','Missed','Planned','Completed','Planned','Cancelled','Planned','Missed'];
+ const rm=['Discuss renewal pricing','Share product roadmap','Demo completed – send notes','No response on call','Confirm proposal approval','Contract signed','Technical deep-dive','Client postponed project','Negotiate payment terms','Voicemail left'];
+ put('followups',fs.map((s,i)=>({id:i+1,customerId:i%2?'':i+1,leadId:i%2?i+1:'',date:s=='Planned'?day(i==4?-2:i+1):day(-i-2),type:TY[i%4],remarks:rm[i],status:s,assigned:sales[i%3]})));
+ put('activities',Array.from({length:15},(_,i)=>({id:i+1,type:TY[i%4],subject:['Intro call','Product demo','Proposal email','Contract review','Requirement workshop'][i%5]+' – '+co[i].split(' ')[0],description:'Discussed requirements and next steps with '+pn[i]+'.',date:day(-i*3-1),customerId:i+1,leadId:i%2?i+1:'',assigned:sales[i%3],status:['Completed','Completed','Planned','Completed','In Progress'][i%5]})));
+ const AA=[['Login','Authentication'],['Create Customer','Customer'],['Update Lead','Lead'],['Create Opportunity','Opportunity'],['Create Follow-Up','Follow-Up'],['Update Customer','Customer'],['Failed Login','Authentication'],['Delete Lead','Lead'],['Role Change','User'],['Logout','Authentication']];
+ put('auditLogs',Array.from({length:20},(_,i)=>{const[a,m]=AA[i%10],u=us[i%5];return{id:i+1,time:new Date(Date.now()-(20-i)*5*36e5).toISOString(),uname:u.name,action:a,module:m,rec:m=='Authentication'?u.id:i+1,result:a=='Failed Login'?'Failed':'Success',details:a+' – '+m+' record #'+(i+1),ip:'127.0.0.1'}}));
+ put('seeded',1);
+}
+function log(action,module,rec='',result='Success',details='',who){const a=D('auditLogs');a.push({id:nid(a),time:now(),uname:who||(me?me.name:'Anonymous'),action,module,rec,result,details,ip:'127.0.0.1'});put('auditLogs',a)}
+
+/* ---------- ui helpers ---------- */
+function toast(m,t='success'){const e=document.createElement('div');e.className=`toast align-items-center text-bg-${t} border-0`;e.innerHTML=`<div class="d-flex"><div class="toast-body">${esc(m)}</div><button class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;$('#ts').appendChild(e);const x=new bootstrap.Toast(e,{delay:3000});x.show();e.addEventListener('hidden.bs.toast',()=>e.remove())}
+function modal(t,b,f,sz){$('#mt').textContent=t;$('#mb').innerHTML=b;$('#mf').innerHTML=f||'';$('#md').className='modal-dialog modal-dialog-scrollable '+(sz||'modal-lg');bootstrap.Modal.getOrCreateInstance($('#m')).show()}
+const hideM=()=>bootstrap.Modal.getOrCreateInstance($('#m')).hide();
+function ask(msg,fn){cb=fn;$('#cmb').textContent=msg;bootstrap.Modal.getOrCreateInstance($('#cm')).show()}
+$('#cmy').onclick=()=>{bootstrap.Modal.getInstance($('#cm')).hide();cb&&cb()};
+const mk=(id,type,labels,data,label)=>{const pie=type=='doughnut';CH.push(new Chart($('#'+id),{type,data:{labels,datasets:[{label,data,backgroundColor:pie?PAL:'#1f5fd6',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:pie,position:'bottom'}}}}))};
+
+/* ---------- auth ---------- */
+const showAuth=()=>{$('#app').classList.add('d-none');$('#auth').classList.remove('d-none')};
+function tab(l){$('#lf').classList.toggle('d-none',!l);$('#rf').classList.toggle('d-none',!!l);$('#tl').classList.toggle('active',!!l);$('#tr').classList.toggle('active',!l)}
+const fill=(e,p)=>{$('#le').value=e;$('#lp').value=p};
+function login(ev){ev.preventDefault();const em=$('#le').value.trim().toLowerCase(),pw=$('#lp').value,us=D('users'),u=us.find(x=>x.email.toLowerCase()==em);
+ const fail=m=>{$('#lerr').textContent=m;$('#lerr').classList.remove('d-none');log('Failed Login','Authentication',u?u.id:'','Failed',m+' ('+em+')',u?u.name:(em||'Unknown'))};
+ if(!em||!pw)return fail('Enter your email and password.');
+ if(!u)return fail('Invalid email or password.');
+ if(u.lock>Date.now())return fail('Account locked. Try again in '+Math.ceil((u.lock-Date.now())/6e4)+' minute(s).');
+ if(u.status!='Active')return fail('Your account is deactivated. Contact an administrator.');
+ if(u.hash!=hash(pw)){u.fails=(u.fails||0)+1;let m='Invalid email or password.';if(u.fails>=5){u.lock=Date.now()+5*6e4;u.fails=0;m='Too many failed attempts. Account locked for 5 minutes.';log('Account Lockout','Security',u.id,'Failed','Locked after 5 failed attempts',u.name)}put('users',us);return fail(m)}
+ u.fails=0;u.lock=0;u.last=now();put('users',us);me={id:u.id,name:u.name,email:u.email,role:u.role};put('currentUser',me);log('Login','Authentication',u.id,'Success',u.email);$('#lerr').classList.add('d-none');start()}
+function reg(ev){ev.preventDefault();const v=id=>$('#'+id).value.trim(),us=D('users'),e={};
+ if(!v('rn'))e.rn='Full Name is required.';else if(v('rn').length>100)e.rn='Full Name must not exceed 100 characters.';
+ if(!v('re'))e.re='Email is required.';else if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v('re')))e.re='Enter a valid email address.';else if(us.some(u=>u.email.toLowerCase()==v('re').toLowerCase()))e.re='An account with this email already exists.';
+ const p=$('#rp').value;if(!(p.length>=8&&/[A-Za-z]/.test(p)&&/\d/.test(p)))e.rp='Password must be at least 8 characters with a letter and a number.';
+ if($('#rc').value!=p)e.rc='Passwords do not match.';
+ ['rn','re','rp','rc'].forEach(k=>{$('#'+k).classList.toggle('is-invalid',!!e[k]);$('#'+k).nextElementSibling.textContent=e[k]||''});
+ if(Object.keys(e).length)return;
+ const id=nid(us);us.push({id,name:v('rn'),email:v('re'),hash:hash(p),role:'Sales Executive',status:'Active',last:'',created:day(),fails:0,lock:0});put('users',us);
+ log('Create User','User',id,'Success','Self-registration: '+v('re'),v('rn'));$('#rf').reset();tab(1);fill(v('re')||us[us.length-1].email,'');toast('Account created. Sign in to continue.')}
+function logout(){log('Logout','Authentication',me.id,'Success',me.email);localStorage.removeItem('acx_currentUser');me=null;$('#lp').value='';showAuth()}
+
+/* ---------- entity configuration ---------- */
+const F=(k,l,t='text',o={})=>({k,l,t,...o}),pairs=a=>a.map(o=>Array.isArray(o)?o:[o,o]),po=f=>pairs(typeof f.opts=='function'?f.opts():f.opts||[]);
+const uo=()=>D('users').filter(u=>u.status=='Active').map(u=>[u.id,u.name]),allU=()=>D('users').map(u=>[u.id,u.name]);
+const cs=()=>[['','Select customer…'],...D('customers').map(c=>[c.id,c.name+' – '+c.company])],cn=()=>[['','— None —'],...cs().slice(1)],ls=()=>[['','— None —'],...D('leads').map(l=>[l.id,l.name+' – '+l.company])];
+const uniq=k=>()=>[...new Set(D('auditLogs').map(x=>x[k]))];
+const E={
+customers:{t:'Customer',tp:'Customers',mod:'Customer',sub:'Customer master data and history',own:'assigned',
+ fields:[F('id','Customer ID','',{hid:1}),F('code','Customer Code','',{hid:1}),F('name','Customer Name','text',{req:1,max:100}),F('email','Email','email',{req:1}),F('phone','Phone','tel',{req:1}),F('company','Company Name','text',{req:1}),F('address','Address','text',{max:200,full:1}),F('city','City','text',{max:50}),F('state','State','text',{max:50}),F('status','Status','select',{opts:['Active','Prospect','Inactive'],req:1,badge:1}),F('assigned','Assigned Sales Executive','select',{opts:uo,ref:'users',req:1}),F('createdBy','Created By','',{hid:1,ref:'users'}),F('created','Created Date','',{hid:1}),F('notes','Notes','textarea',{max:500,full:1})],
+ cols:[['code','Code'],['name','Customer'],['company','Company'],['email','Email'],['phone','Phone'],['status','Status'],['assigned','Assigned To']],
+ search:['name','email','phone','company','code'],filters:[{k:'status',l:'Status',opts:['Active','Prospect','Inactive']},{k:'assigned',l:'Assigned to',opts:allU}],
+ def:()=>({status:'Active',assigned:me.id}),init:id=>({code:'CUST-'+(1000+id),created:day(),createdBy:me.id}),
+ val:(r,o,all)=>{const e={},x=all.filter(c=>!o||c.id!=o.id);
+  if(x.some(c=>c.email.toLowerCase()==r.email.toLowerCase()))e.email='A customer with this email already exists.';
+  if(x.some(c=>c.phone==r.phone))e.phone='A customer with this phone number already exists.';
+  if(x.some(c=>c.name.toLowerCase()==r.name.toLowerCase()&&c.company.toLowerCase()==r.company.toLowerCase()))e.name='Duplicate customer: this name already exists for the same company.';return e}},
+leads:{t:'Lead',tp:'Leads',mod:'Lead',sub:'Capture, qualify and convert prospects',own:'assigned',
+ fields:[F('id','Lead ID','',{hid:1}),F('code','Lead Code','',{hid:1}),F('name','Lead Name','text',{req:1,max:100}),F('email','Email','email',{req:1}),F('phone','Phone','tel',{req:1}),F('company','Company Name','text',{req:1}),F('source','Source','select',{opts:['Website','Referral','LinkedIn','Trade Show','Cold Call','Email Campaign'],req:1}),F('status','Status','select',{opts:LS,req:1,badge:1}),F('priority','Priority','select',{opts:['High','Medium','Low'],req:1,badge:1}),F('value','Expected Value (₹)','number',{req:1,num:1,money:1}),F('assigned','Assigned To','select',{opts:uo,ref:'users',req:1}),F('created','Created Date','',{hid:1}),F('notes','Notes','textarea',{max:500,full:1})],
+ cols:[['code','Code'],['name','Lead'],['company','Company'],['source','Source'],['status','Status'],['priority','Priority'],['value','Exp. Value'],['assigned','Assigned To']],
+ search:['name','company','email','phone','code'],filters:[{k:'status',l:'Status',opts:LS},{k:'priority',l:'Priority',opts:['High','Medium','Low']},{k:'assigned',l:'Assigned to',opts:allU}],
+ def:()=>({status:'New',priority:'Medium',assigned:me.id}),init:id=>({code:'LEAD-'+(2000+id),created:day()}),
+ val:(r,o)=>{const e={},v=+r.value;if(r.value!==''&&!isNaN(v)&&(v<0||v>1e8))e.value='Expected Value must be between 0 and 100000000.';
+  if(o&&o.status!=r.status&&!(T[o.status]||[]).includes(r.status))e.status=`Invalid status change: ${o.status} cannot move to ${r.status}.`;return e},
+ act:r=>NXT[r.status]?`<button class="btn btn-outline-success" title="Advance to ${NXT[r.status]}" onclick="adv(${r.id})"><i class="bi bi-arrow-right-circle"></i></button>`:r.status=='Qualified'?`<button class="btn btn-outline-success" title="Convert" onclick="conv(${r.id})"><i class="bi bi-arrow-repeat"></i> Convert</button>`:''},
+opportunities:{t:'Opportunity',tp:'Opportunities',mod:'Opportunity',sub:'Sales pipeline and deal tracking',own:'assigned',
+ fields:[F('id','Opportunity ID','',{hid:1}),F('name','Opportunity Name','text',{req:1,max:100}),F('customerId','Customer','select',{opts:cs,ref:'customers',req:1}),F('leadId','Lead','select',{opts:ls,ref:'leads'}),F('amount','Amount (₹)','number',{req:1,num:1,money:1}),F('stage','Stage','select',{opts:ST,req:1,badge:1}),F('prob','Probability (%)','number',{req:1,num:1,pct:1}),F('close','Expected Close Date','date',{req:1}),F('status','Status','',{hid:1,badge:1}),F('assigned','Assigned To','select',{opts:uo,ref:'users',req:1}),F('created','Created Date','',{hid:1}),F('notes','Notes','textarea',{max:500,full:1})],
+ cols:[['name','Opportunity'],['customerId','Customer'],['amount','Amount'],['stage','Stage'],['prob','Prob.'],[r=>fmt(r.amount*r.prob/100),'Weighted'],['close','Close Date'],['status','Status'],['assigned','Owner']],
+ search:['name','customerId'],filters:[{k:'stage',l:'Stage',opts:ST},{k:'status',l:'Status',opts:['Open','Won','Lost']},{k:'customerId',l:'Customer',opts:()=>cs().slice(1)}],
+ def:()=>({stage:'Qualification',prob:20,assigned:me.id}),init:()=>({created:day()}),
+ pre:r=>{if(r.stage=='Won')r.prob=100;if(r.stage=='Lost')r.prob=0;r.status=r.stage=='Won'?'Won':r.stage=='Lost'?'Lost':'Open'},
+ val:r=>{const e={},a=+r.amount,p=+r.prob,act=!['Won','Lost'].includes(r.stage);
+  if(r.amount!==''&&!isNaN(a)){if(a<0)e.amount='Opportunity Amount cannot be negative.';else if(act&&a<=0)e.amount='Opportunity Amount must be greater than 0.'}
+  if(r.prob!==''&&!isNaN(p)&&(p<0||p>100))e.prob='Probability must be between 0 and 100.';
+  if(act&&r.close&&r.close<day())e.close='Expected Close Date cannot be in the past.';return e},
+ head:()=>`<div class="btn-group"><button class="btn btn-${S.opportunities?.kv?'outline-':''}secondary" onclick="vw(0)"><i class="bi bi-table"></i> Table</button><button class="btn btn-${S.opportunities?.kv?'':'outline-'}secondary" onclick="vw(1)"><i class="bi bi-kanban"></i> Pipeline</button></div>`,
+ kv:rows=>`<div class="kanban">${ST.map((s,si)=>{const L=rows.filter(r=>r.stage==s);return `<div class="kcol"><div class="d-flex justify-content-between mb-2">${badge(s)}<span class="small text-muted">${L.length} · ${fmt(sum(L,'amount'))}</span></div>${L.map(r=>`<div class="kcard"><div class="fw-semibold small">${esc(r.name)}</div><div class="text-muted small">${esc(nm('customers',r.customerId))}</div><div class="d-flex justify-content-between mt-1"><b>${fmt(r.amount)}</b><span class="small text-muted">${r.prob}%</span></div><div class="small text-muted"><i class="bi bi-calendar3"></i> ${r.close}</div><div class="d-flex justify-content-between mt-2"><div class="btn-group btn-group-sm"><button class="btn btn-light" ${si==0?'disabled':''} onclick="mv(${r.id},-1)"><i class="bi bi-chevron-left"></i></button><button class="btn btn-light" ${si==4?'disabled':''} onclick="mv(${r.id},1)"><i class="bi bi-chevron-right"></i></button></div><button class="btn btn-sm btn-light" onclick="edit('opportunities',${r.id})"><i class="bi bi-pencil"></i></button></div></div>`).join('')||'<div class="text-muted small text-center py-4">No deals</div>'}</div>`}).join('')}</div>`},
+followups:{t:'Follow-Up',tp:'Follow-Ups',mod:'Follow-Up',sub:'Schedule, complete and reschedule follow-ups',own:'assigned',ds:'date',
+ fields:[F('id','Follow-Up ID','',{hid:1}),F('customerId','Customer','select',{opts:cn,ref:'customers'}),F('leadId','Lead','select',{opts:ls,ref:'leads'}),F('date','Follow-Up Date','date',{req:1}),F('type','Follow-Up Type','select',{opts:TY,req:1}),F('status','Status','select',{opts:['Planned','Completed','Missed','Cancelled'],req:1,badge:1}),F('assigned','Assigned To','select',{opts:uo,ref:'users',req:1}),F('remarks','Remarks','textarea',{req:1,max:500,full:1})],
+ cols:[['id','ID'],['customerId','Customer'],['leadId','Lead'],[r=>r.date+(r.status=='Planned'&&r.date<day()?' <span class="badge bg-danger">Overdue</span>':''),'Date'],['type','Type'],['remarks','Remarks'],['status','Status'],['assigned','Assigned To']],
+ search:['customerId','leadId','remarks','type'],
+ filters:[{k:'status',l:'Status',opts:['Planned','Completed','Missed','Cancelled']},{k:'assigned',l:'Assigned to',opts:allU},{k:'when',l:'When',opts:['Upcoming','Overdue','Today'],fn:(r,v)=>r.status=='Planned'&&(v=='Overdue'?r.date<day():v=='Today'?r.date==day():r.date>=day())},{k:'dt',l:'Date',date:1,fn:(r,v)=>r.date==v}],
+ def:()=>({status:'Planned',type:'Call',assigned:me.id}),
+ val:(r,o)=>{const e={};if(!r.customerId&&!r.leadId)e.customerId='Select a customer or a lead.';
+  if(r.status=='Planned'&&r.date&&r.date<day()&&(!o||o.date!=r.date))e.date='Follow-up date cannot be earlier than today.';return e},
+ act:r=>r.status=='Planned'?`<button class="btn btn-outline-success" title="Complete" onclick="fuDone(${r.id})"><i class="bi bi-check2-circle"></i></button><button class="btn btn-outline-warning" title="Reschedule" onclick="fuRes(${r.id})"><i class="bi bi-calendar-event"></i></button>`:r.status=='Missed'?`<button class="btn btn-outline-warning" title="Reschedule" onclick="fuRes(${r.id})"><i class="bi bi-calendar-event"></i></button>`:''},
+activities:{t:'Activity',tp:'Activities',mod:'Activity',sub:'Calls, meetings, emails and tasks',own:'assigned',ds:'date',
+ fields:[F('id','Activity ID','',{hid:1}),F('type','Activity Type','select',{opts:TY,req:1}),F('subject','Subject','text',{req:1,max:150,full:1}),F('description','Description','textarea',{max:500,full:1}),F('date','Activity Date','date',{req:1}),F('status','Status','select',{opts:['Planned','In Progress','Completed'],req:1,badge:1}),F('customerId','Customer','select',{opts:cn,ref:'customers'}),F('leadId','Lead','select',{opts:ls,ref:'leads'}),F('assigned','Assigned To','select',{opts:uo,ref:'users',req:1})],
+ cols:[['type','Type']],search:['subject','description','customerId','leadId'],
+ filters:[{k:'type',l:'Type',opts:TY},{k:'status',l:'Status',opts:['Planned','In Progress','Completed']},{k:'assigned',l:'Assigned to',opts:allU},{k:'dt',l:'Date',date:1,fn:(r,v)=>r.date==v}],
+ def:()=>({type:'Call',status:'Planned',date:day(),assigned:me.id}),
+ tl:rows=>`<div class="card shadow-sm"><div class="card-body"><div class="tl">${rows.map(r=>`<div class="tli"><span class="tld bg-${BC[r.status]||'secondary'}"><i class="bi bi-${TI[r.type]}"></i></span><div class="card card-body py-2 mb-3 border"><div class="d-flex justify-content-between flex-wrap gap-2"><div><b>${esc(r.subject)}</b> ${badge(r.status)}</div><div class="btn-group btn-group-sm"><button class="btn btn-outline-primary" onclick="edit('activities',${r.id})"><i class="bi bi-pencil"></i></button>${me.role=='Sales Executive'?'':`<button class="btn btn-outline-danger" onclick="del('activities',${r.id})"><i class="bi bi-trash"></i></button>`}</div></div><div class="text-muted small">${esc(r.description)}</div><div class="small mt-1"><i class="bi bi-calendar3"></i> ${r.date} · ${r.type} · <i class="bi bi-person"></i> ${esc(nm('users',r.assigned))}${r.customerId?' · <i class="bi bi-building"></i> '+esc(nm('customers',r.customerId)):''}${r.leadId?' · <i class="bi bi-bullseye"></i> '+esc(nm('leads',r.leadId)):''}</div></div></div>`).join('')}</div></div></div>`},
+users:{t:'User',tp:'Users & Roles',mod:'User',sub:'Administer accounts, roles and access',nodel:1,
+ fields:[F('name','Name','text',{req:1,max:100}),F('email','Email','email',{req:1}),F('role','Role','select',{opts:ALL,req:1,badge:1}),F('status','Status','select',{opts:['Active','Inactive'],req:1,badge:1}),F('password','Password (leave blank to keep)','password',{nov:1,full:1}),F('last','Last Login','',{hid:1,dt:1}),F('created','Created Date','',{hid:1})],
+ cols:[['name','Name'],['email','Email'],['role','Role'],[r=>badge(r.status)+(r.lock>Date.now()?' '+badge('Locked'):''),'Status'],['last','Last Login'],['created','Created']],
+ search:['name','email','role'],filters:[{k:'role',l:'Role',opts:ALL},{k:'status',l:'Status',opts:['Active','Inactive']}],
+ def:()=>({role:'Sales Executive',status:'Active'}),init:()=>({created:day(),last:'',fails:0,lock:0}),
+ pre:(r,o)=>{if(r.password){r.hash=hash(r.password);log('Password Reset','Security',o?o.id:'','Success','Administrator set a new password for '+r.email)}delete r.password},
+ post:(rec,o)=>{if(o&&o.role!=rec.role)log('Role Change','User',rec.id,'Success',`${rec.name}: ${o.role} → ${rec.role}`);if(rec.id==me.id){me={id:rec.id,name:rec.name,email:rec.email,role:rec.role};put('currentUser',me);start()}},
+ val:(r,o,all)=>{const e={};if(all.some(u=>u.email.toLowerCase()==r.email.toLowerCase()&&(!o||u.id!=o.id)))e.email='A user with this email already exists.';
+  if(!o&&!r.password)e.password='Password is required.';
+  else if(r.password&&!(r.password.length>=8&&/[A-Za-z]/.test(r.password)&&/\d/.test(r.password)))e.password='Password must be at least 8 characters with a letter and a number.';return e},
+ act:r=>`${r.lock>Date.now()?`<button class="btn btn-outline-warning" title="Unlock" onclick="unlock(${r.id})"><i class="bi bi-unlock"></i></button>`:''}${r.id!=me.id?`<button class="btn btn-outline-${r.status=='Active'?'secondary':'success'}" title="${r.status=='Active'?'Deactivate':'Activate'}" onclick="tgl(${r.id})"><i class="bi bi-${r.status=='Active'?'person-slash':'person-check'}"></i></button>`:''}`},
+auditLogs:{t:'Audit Entry',tp:'Audit Log',mod:'Audit',sub:'Append-only record of security and business events',ro:1,
+ fields:[F('time','Date/Time','',{hid:1,dt:1}),F('uname','User','',{hid:1}),F('action','Action','',{hid:1}),F('module','Module','',{hid:1}),F('rec','Record ID','',{hid:1}),F('result','Result','',{hid:1,badge:1}),F('details','Details','',{hid:1})],
+ cols:[['time','Date/Time'],['uname','User'],['action','Action'],['module','Module'],['rec','Record ID'],['result','Result'],['details','Details']],
+ search:['uname','action','module','details'],filters:[{k:'uname',l:'User',opts:uniq('uname')},{k:'module',l:'Module',opts:uniq('module')},{k:'action',l:'Action',opts:uniq('action')},{k:'dt',l:'Date',date:1,fn:(r,v)=>ld(new Date(r.time))==v}]}
+};
+const NAV=[['dashboard','Dashboard','speedometer2',ALL],['customers','Customers','people',ALL],['leads','Leads','bullseye',ALL],['opportunities','Opportunities','briefcase',ALL],['followups','Follow-Ups','calendar-check',ALL],['activities','Activities','activity',ALL],['users','Users & Roles','shield-lock',['Admin']],['reports','Reports','bar-chart-line',['Admin','Manager']],['auditLogs','Audit Log','journal-text',['Admin']]];
+
+/* ---------- generic CRUD ---------- */
+const vis=e=>{const c=E[e]||{};return D(e).filter(r=>me.role!='Sales Executive'||!c.own||r[c.own]==me.id)};
+const fld=(e,k)=>E[e].fields.find(f=>f.k==k)||{};
+function show(e,k,r){const f=fld(e,k),v=r[k];if(f.ref)return esc(nm(f.ref,v));if(f.money)return fmt(v);if(f.pct)return v+'%';if(f.badge)return badge(v);if(f.dt)return v?new Date(v).toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'}):'—';return esc(v===''||v==null?'—':v)}
+const cell=(e,x,r)=>typeof x[0]=='function'?x[0](r):show(e,x[0],r);
+const sv=(e,x,r)=>{if(typeof x[0]=='function')return strip(x[0](r));const f=fld(e,x[0]);return f.ref?nm(f.ref,r[x[0]]):r[x[0]]};
+function formHTML(e,r){return '<div class="row g-3">'+E[e].fields.filter(f=>!f.hid).map(f=>{const v=r[f.k]??'',id='f_'+f.k;let i;
+ if(f.t=='select')i=`<select class="form-select" id="${id}">${po(f).map(([a,b])=>`<option value="${esc(a)}" ${a==v&&String(a)===String(v)?'selected':''}>${esc(b)}</option>`).join('')}</select>`;
+ else if(f.t=='textarea')i=`<textarea class="form-control" id="${id}" rows="2">${esc(v)}</textarea>`;
+ else i=`<input class="form-control" id="${id}" type="${f.t}" ${f.num?'step="any"':''} value="${esc(v)}" autocomplete="off">`;
+ return `<div class="col-md-${f.full?12:6}"><label class="form-label small fw-semibold" for="${id}">${f.l}${f.req?' <span class="text-danger">*</span>':''}</label>${i}<div class="invalid-feedback" id="e_${f.k}"></div></div>`}).join('')+'</div>'}
+function vGen(e,r){const er={};E[e].fields.filter(f=>!f.hid).forEach(f=>{const v=r[f.k];
+ if(f.req&&(v===''||v==null)){er[f.k]=f.l+' is required.';return}if(v===''||v==null)return;
+ if(f.t=='email'&&!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v))er[f.k]='Enter a valid email address.';
+ else if(f.t=='tel'&&!/^[6-9]\d{9}$/.test(v))er[f.k]='Enter a valid phone number.';
+ else if(f.t=='number'&&isNaN(v))er[f.k]=f.l+' must be a valid number.';
+ else if(f.t=='date'&&isNaN(Date.parse(v)))er[f.k]='Enter a valid date.';
+ else if(f.t!='number'&&String(v).length>(f.max||100))er[f.k]=f.l+' must not exceed '+(f.max||100)+' characters.'});return er}
+function edit(e,id){const c=E[e],o=id?D(e).find(x=>x.id==id):null;
+ modal((o?'Edit ':'Add ')+c.t,formHTML(e,o||c.def()),`<button class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary" onclick="save('${e}',${id||0})"><i class="bi bi-check2"></i> Save</button>`)}
+function save(e,id){const c=E[e],all=D(e),o=id?all.find(x=>x.id==id):null,r={};
+ c.fields.filter(f=>!f.hid).forEach(f=>{let v=$('#f_'+f.k).value.trim();if(f.ref&&v!=='')v=+v;r[f.k]=v});
+ const er=vGen(e,r),cu=c.val?c.val(r,o,all):{};for(const k in cu)if(!er[k])er[k]=cu[k];
+ $$('#m .is-invalid').forEach(x=>x.classList.remove('is-invalid'));
+ if(Object.keys(er).length){for(const k in er){const i=$('#f_'+k);if(i){i.classList.add('is-invalid');$('#e_'+k).textContent=er[k]}}return}
+ c.fields.forEach(f=>{if(f.num&&r[f.k]!=='')r[f.k]=+r[f.k]});
+ if(me.role=='Sales Executive'&&'assigned' in r)r.assigned=me.id;
+ if(c.pre)c.pre(r,o);
+ let rec;if(o){rec={...o,...r};all[all.indexOf(o)]=rec}else{const n=nid(all);rec={id:n,...(c.init?c.init(n):{}),...r};all.push(rec)}
+ put(e,all);log((o?'Update ':'Create ')+c.mod,c.mod,rec.id,'Success',rec.name||rec.subject||rec.remarks||'');
+ if(c.post)c.post(rec,o);hideM();toast(c.t+(o?' updated':' created')+' successfully.');render()}
+function view(e,id){const c=E[e],r=D(e).find(x=>x.id==id);modal(c.t+' Details',`<dl class="row mb-0">${c.fields.filter(f=>!f.nov).map(f=>`<dt class="col-sm-4 text-muted fw-normal">${f.l}</dt><dd class="col-sm-8">${show(e,f.k,r)}</dd>`).join('')}</dl>`,'<button class="btn btn-light" data-bs-dismiss="modal">Close</button>')}
+function del(e,id){const c=E[e];ask(`Delete this ${c.t.toLowerCase()}? This cannot be undone.`,()=>{put(e,D(e).filter(x=>x.id!=id));log('Delete '+c.mod,c.mod,id);toast(c.t+' deleted.','danger');render()})}
+
+/* ---------- list engine ---------- */
+function list(e){const c=E[e],s=S[e]||(S[e]={q:'',p:1,f:{},sort:-1,dir:1});
+ $('#view').innerHTML=`<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2"><div><h4 class="fw-bold mb-0">${c.tp}</h4><div class="text-muted small">${c.sub}</div></div><div class="d-flex gap-2">${c.head?c.head():''}${c.ro?'':`<button class="btn btn-primary" onclick="edit('${e}')"><i class="bi bi-plus-lg"></i> Add ${c.t}</button>`}</div></div>
+ <div class="card shadow-sm mb-3"><div class="card-body"><div class="row g-2"><div class="col-lg-4"><div class="input-group"><span class="input-group-text bg-white"><i class="bi bi-search"></i></span><input class="form-control" id="q" placeholder="Search…" value="${esc(s.q)}"></div></div>
+ ${(c.filters||[]).map(f=>`<div class="col-6 col-lg">${f.date?`<input type="date" class="form-control" title="${f.l}" data-f="${f.k}" value="${esc(s.f[f.k]||'')}">`:`<select class="form-select" data-f="${f.k}"><option value="">${f.l}: All</option>${po(f).map(([a,b])=>`<option value="${esc(a)}" ${String(s.f[f.k])===String(a)?'selected':''}>${esc(b)}</option>`).join('')}</select>`}</div>`).join('')}
+ <div class="col-auto"><button class="btn btn-outline-secondary" title="Reset filters" onclick="S['${e}']=null;list('${e}')"><i class="bi bi-arrow-counterclockwise"></i></button></div></div></div></div><div id="tb"></div>`;
+ $('#q').oninput=ev=>{s.q=ev.target.value;s.p=1;body(e)};
+ $$('[data-f]').forEach(el=>el.oninput=()=>{s.f[el.dataset.f]=el.value;s.p=1;body(e)});body(e)}
+function body(e){const c=E[e],s=S[e],q=s.q.toLowerCase();
+ const rows=vis(e).filter(r=>(!q||(c.search||[]).some(k=>strip(show(e,k,r)).toLowerCase().includes(q)))&&(c.filters||[]).every(f=>{const v=s.f[f.k];return !v||(f.fn?f.fn(r,v):String(r[f.k])==v)}));
+ if(s.sort>=0){const x=c.cols[s.sort];rows.sort((a,b)=>cmp(sv(e,x,a),sv(e,x,b))*s.dir)}else{const dk=c.ds||'id';rows.sort((a,b)=>cmp(b[dk],a[dk])||b.id-a.id)}
+ const n=rows.length,kv=c.kv&&s.kv,pp=kv?n||1:10,pages=Math.max(1,Math.ceil(n/pp));s.p=Math.min(s.p,pages);const pg=rows.slice((s.p-1)*pp,s.p*pp);let h;
+ if(!n)h='<div class="card shadow-sm"><div class="text-center text-muted py-5"><i class="bi bi-inbox fs-1"></i><div class="mt-2">No records found. Adjust your filters or add a new record.</div></div></div>';
+ else if(kv)h=c.kv(rows);else if(c.tl)h=c.tl(pg);
+ else h=`<div class="card shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr>${c.cols.map((x,i)=>`<th onclick="sortBy('${e}',${i})">${x[1]}${s.sort==i?(s.dir>0?' ▲':' ▼'):''}</th>`).join('')}${c.ro?'':'<th class="text-end">Actions</th>'}</tr></thead><tbody>${pg.map(r=>`<tr>${c.cols.map(x=>`<td>${cell(e,x,r)}</td>`).join('')}${c.ro?'':`<td class="text-end">${acts(e,r)}</td>`}</tr>`).join('')}</tbody></table></div></div>`;
+ if(n&&!kv)h+=`<div class="d-flex justify-content-between align-items-center mt-3 small text-muted"><span>Showing ${(s.p-1)*pp+1}–${Math.min(n,s.p*pp)} of ${n}</span><div class="btn-group"><button class="btn btn-outline-secondary btn-sm" ${s.p<=1?'disabled':''} onclick="pgo('${e}',-1)">Previous</button><button class="btn btn-outline-secondary btn-sm disabled">${s.p}/${pages}</button><button class="btn btn-outline-secondary btn-sm" ${s.p>=pages?'disabled':''} onclick="pgo('${e}',1)">Next</button></div></div>`;
+ $('#tb').innerHTML=h}
+const pgo=(e,d)=>{S[e].p+=d;body(e)},sortBy=(e,i)=>{const s=S[e];s.dir=s.sort==i?-s.dir:1;s.sort=i;body(e)},vw=v=>{S.opportunities.kv=v;list('opportunities')};
+const acts=(e,r)=>{const c=E[e];return `<div class="btn-group btn-group-sm">${c.act?c.act(r):''}<button class="btn btn-outline-secondary" title="View" onclick="view('${e}',${r.id})"><i class="bi bi-eye"></i></button><button class="btn btn-outline-primary" title="Edit" onclick="edit('${e}',${r.id})"><i class="bi bi-pencil"></i></button>${c.nodel||me.role=='Sales Executive'?'':`<button class="btn btn-outline-danger" title="Delete" onclick="del('${e}',${r.id})"><i class="bi bi-trash"></i></button>`}</div>`};
+
+/* ---------- workflows ---------- */
+function adv(id){const a=D('leads'),l=a.find(x=>x.id==id),o=l.status;l.status=NXT[o];put('leads',a);log('Update Lead','Lead',id,'Success',`Status ${o} → ${l.status}`);toast('Lead moved to '+l.status);render()}
+function conv(id){const l=D('leads').find(x=>x.id==id);modal('Convert Lead',`<p>Convert <b>${esc(l.name)}</b> (${esc(l.company)}) to a customer.</p><div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="cc" checked><label class="form-check-label" for="cc">Create customer record</label></div><div class="form-check"><input class="form-check-input" type="checkbox" id="co" checked><label class="form-check-label" for="co">Create opportunity (${fmt(l.value)}, Qualification stage)</label></div>`,`<button class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button class="btn btn-success" onclick="doConv(${id})">Convert lead</button>`,'')}
+function doConv(id){const L=D('leads'),l=L.find(x=>x.id==id);let cid='';
+ if($('#cc').checked||$('#co').checked){const cu=D('customers'),ex=cu.find(c=>c.email.toLowerCase()==l.email.toLowerCase()||c.phone==l.phone);
+  if(ex)cid=ex.id;else{cid=nid(cu);cu.push({id:cid,code:'CUST-'+(1000+cid),name:l.name,email:l.email,phone:l.phone,company:l.company,address:'',city:'',state:'',status:'Active',created:day(),createdBy:me.id,assigned:l.assigned,notes:'Converted from '+l.code});put('customers',cu);log('Create Customer','Customer',cid,'Success','Created from lead '+l.code)}}
+ if($('#co').checked){const op=D('opportunities'),n=nid(op);op.push({id:n,name:l.company+' – New Business',customerId:cid,leadId:l.id,amount:Math.max(l.value,1),stage:'Qualification',prob:20,close:day(30),status:'Open',created:day(),assigned:l.assigned,notes:'From '+l.code});put('opportunities',op);log('Create Opportunity','Opportunity',n,'Success','Created from lead '+l.code)}
+ l.status='Converted';put('leads',L);log('Lead Conversion','Lead',id,'Success',l.name+' converted');hideM();toast('Lead converted successfully.');render()}
+function mv(id,d){const a=D('opportunities'),o=a.find(x=>x.id==id),i=ST.indexOf(o.stage)+d;if(i<0||i>4)return;o.stage=ST[i];o.prob=PR[o.stage];o.status=i==3?'Won':i==4?'Lost':'Open';if(i<3&&o.close<day())o.close=day(14);put('opportunities',a);log('Update Opportunity','Opportunity',id,'Success','Stage moved to '+o.stage);toast('Moved to '+o.stage);render()}
+function fuDone(id){const a=D('followups'),f=a.find(x=>x.id==id);f.status='Completed';put('followups',a);log('Update Follow-Up','Follow-Up',id,'Success','Marked completed');toast('Follow-up completed.');render()}
+function fuRes(id){modal('Reschedule Follow-Up',`<label class="form-label">New date</label><input type="date" class="form-control" id="rd" value="${day(1)}"><div class="invalid-feedback">Follow-up date cannot be earlier than today.</div>`,`<button class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary" onclick="doRes(${id})">Reschedule</button>`,'modal-sm')}
+function doRes(id){const d=$('#rd').value;if(!d||d<day()){$('#rd').classList.add('is-invalid');return}const a=D('followups'),f=a.find(x=>x.id==id);f.date=d;f.status='Planned';put('followups',a);log('Update Follow-Up','Follow-Up',id,'Success','Rescheduled to '+d);hideM();toast('Follow-up rescheduled.');render()}
+function tgl(id){const a=D('users'),u=a.find(x=>x.id==id);u.status=u.status=='Active'?'Inactive':'Active';put('users',a);log('Update User','User',id,'Success',u.name+' set '+u.status);toast(u.name+' is now '+u.status);render()}
+function unlock(id){const a=D('users'),u=a.find(x=>x.id==id);u.lock=0;u.fails=0;put('users',a);log('Account Unlock','Security',id,'Success',u.name+' unlocked');toast('Account unlocked.');render()}
+
+/* ---------- dashboard ---------- */
+const box=(t,i)=>`<div class="card shadow-sm h-100"><div class="card-header bg-white fw-bold">${t}</div><div class="card-body">${i}</div></div>`;
+const ul=a=>`<ul class="list-group list-group-flush">${a||'<li class="list-group-item text-muted">Nothing to show</li>'}</ul>`;
+function dash(){const cu=vis('customers'),le=vis('leads'),op=vis('opportunities'),fu=vis('followups'),ac=vis('activities'),oo=op.filter(o=>o.status=='Open');
+ const K=[['Total Customers',cu.length,'people','primary'],['Total Leads',le.length,'bullseye','info'],['Open Leads',le.filter(l=>['New','Contacted','Qualified'].includes(l.status)).length,'funnel','warning'],['Total Opportunities',op.length,'briefcase','primary'],['Open Opportunities',oo.length,'folder2-open','info'],['Won Opportunities',op.filter(o=>o.status=='Won').length,'trophy','success'],['Lost Opportunities',op.filter(o=>o.status=='Lost').length,'x-circle','danger'],['Total Pipeline Value',fmt(sum(oo,'amount')),'currency-rupee','dark']];
+ const ra=[...ac].sort((a,b)=>cmp(b.date,a.date)).slice(0,5),uf=fu.filter(f=>f.status=='Planned').sort((a,b)=>cmp(a.date,b.date)).slice(0,5),ro=[...op].sort((a,b)=>b.id-a.id).slice(0,5);
+ $('#view').innerHTML=`<div class="mb-3"><h4 class="fw-bold mb-0">Welcome back, ${esc(me.name.split(' ')[0])}</h4><div class="text-muted small">${me.role} dashboard · ${new Date().toDateString()}${me.role=='Sales Executive'?' · showing your assigned records':''}</div></div>
+ <div class="row g-3 mb-3">${K.map(k=>`<div class="col-6 col-xl-3"><div class="card kpi shadow-sm h-100"><div class="card-body d-flex justify-content-between align-items-center"><div><div class="text-muted small">${k[0]}</div><div class="fs-4 fw-bold">${k[1]}</div></div><div class="kic bg-${k[3]}-subtle text-${k[3]}-emphasis"><i class="bi bi-${k[2]}"></i></div></div></div></div>`).join('')}</div>
+ <div class="row g-3 mb-3"><div class="col-lg-4">${box('Lead Status','<div style="height:260px"><canvas id="c1"></canvas></div>')}</div><div class="col-lg-4">${box('Opportunity Pipeline','<div style="height:260px"><canvas id="c2"></canvas></div>')}</div><div class="col-lg-4">${box('Monthly Sales (Won)','<div style="height:260px"><canvas id="c3"></canvas></div>')}</div></div>
+ <div class="row g-3 mb-3"><div class="col-lg-6">${box('Recent Activities',ul(ra.map(a=>`<li class="list-group-item d-flex justify-content-between"><span><i class="bi bi-${TI[a.type]} text-primary"></i> ${esc(a.subject)}</span><small class="text-muted">${a.date}</small></li>`).join('')))}</div><div class="col-lg-6">${box('Upcoming Follow-Ups',ul(uf.map(f=>`<li class="list-group-item d-flex justify-content-between"><span><i class="bi bi-${TI[f.type]} text-primary"></i> ${esc(f.remarks)} <small class="text-muted">· ${esc(nm('customers',f.customerId)!='—'?nm('customers',f.customerId):nm('leads',f.leadId))}</small></span><small class="${f.date<day()?'text-danger fw-bold':'text-muted'}">${f.date}</small></li>`).join('')))}</div></div>
+ <div class="row g-3"><div class="col-lg-6">${box('Recent Opportunities',ul(ro.map(o=>`<li class="list-group-item d-flex justify-content-between"><span>${esc(o.name)}</span><span>${badge(o.stage)} <b>${fmt(o.amount)}</b></span></li>`).join('')))}</div><div class="col-lg-6">${box('Pipeline Summary',`<table class="table table-sm mb-0"><thead><tr><th>Stage</th><th>Deals</th><th>Amount</th><th>Weighted</th></tr></thead><tbody>${ST.map(s=>{const L=op.filter(o=>o.stage==s);return `<tr><td>${badge(s)}</td><td>${L.length}</td><td>${fmt(sum(L,'amount'))}</td><td>${fmt(L.reduce((t,o)=>t+o.amount*o.prob/100,0))}</td></tr>`}).join('')}</tbody></table>`)}</div></div>`;
+ const lab=['New','Contacted','Qualified','Lost','Converted'];mk('c1','doughnut',lab,lab.map(s=>le.filter(l=>l.status==s).length),'Leads');
+ mk('c2','bar',ST,ST.map(s=>op.filter(o=>o.stage==s).length),'Opportunities');
+ const ms=[];for(let i=5;i>=0;i--){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);ms.push([d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),d.toLocaleString('en',{month:'short',year:'2-digit'})])}
+ mk('c3','bar',ms.map(m=>m[1]),ms.map(m=>sum(op.filter(o=>o.status=='Won'&&o.close.slice(0,7)==m[0]),'amount')),'Won amount (₹)')}
+
+/* ---------- reports ---------- */
+const RS={r:'customer',from:'',to:'',owner:''};
+const gd=(x,k)=>k=='time'?ld(new Date(x.time)):x[k],F2=(a,k)=>a.filter(x=>(!RS.from||gd(x,k)>=RS.from)&&(!RS.to||gd(x,k)<=RS.to)&&(!RS.owner||!('assigned' in x)||x.assigned==RS.owner));
+const cnt=a=>{const m={};a.forEach(v=>m[v]=(m[v]||0)+1);return{cl:Object.keys(m),cd:Object.values(m)}};
+const RP={
+customer:['Customer Report',()=>{const r=F2(vis('customers'),'created');return{h:['Code','Name','Company','Status','Owner','Created'],r:r.map(c=>[c.code,c.name,c.company,c.status,nm('users',c.assigned),c.created]),...cnt(r.map(c=>c.status)),lbl:'Customers by Status',type:'doughnut'}}],
+lead:['Lead Report',()=>{const r=F2(vis('leads'),'created');return{h:['Code','Lead','Company','Source','Status','Owner','Converted','Value'],r:r.map(l=>[l.code,l.name,l.company,l.source,l.status,nm('users',l.assigned),l.status=='Converted'?'Yes':'No',l.value]),...cnt(r.map(l=>l.source)),lbl:'Leads by Source'}}],
+followup:['Follow-Up Report',()=>{const r=F2(vis('followups'),'date');return{h:['ID','Customer','Lead','Date','Type','Status','Owner','Overdue'],r:r.map(f=>[f.id,nm('customers',f.customerId),nm('leads',f.leadId),f.date,f.type,f.status,nm('users',f.assigned),f.status=='Planned'&&f.date<day()?'Yes':'No']),...cnt(r.map(f=>f.status)),lbl:'Follow-Ups by Status',type:'doughnut'}}],
+opportunity:['Opportunity Report',()=>{const r=F2(vis('opportunities'),'created');return{h:['Name','Customer','Stage','Amount','Probability %','Weighted','Close Date'],r:r.map(o=>[o.name,nm('customers',o.customerId),o.stage,o.amount,o.prob,o.amount*o.prob/100,o.close]),cl:ST,cd:ST.map(s=>sum(r.filter(o=>o.stage==s),'amount')),lbl:'Amount by Stage (₹)'}}],
+pipeline:['Pipeline Report',()=>{const r=F2(vis('opportunities'),'created'),w=a=>a.reduce((t,o)=>t+o.amount*o.prob/100,0),row=(g,n,a)=>[g,n,a.length,sum(a,'amount'),w(a)];
+ return{h:['Group','Name','Deals','Amount','Weighted'],r:[...ST.map(s=>row('Stage',s,r.filter(o=>o.stage==s))),...D('users').filter(u=>r.some(o=>o.assigned==u.id)).map(u=>row('Owner',u.name,r.filter(o=>o.assigned==u.id)))],cl:ST,cd:ST.map(s=>w(r.filter(o=>o.stage==s))),lbl:'Weighted Pipeline by Stage (₹)'}}],
+conversion:['Conversion Report',()=>{const l=F2(vis('leads'),'created'),o=F2(vis('opportunities'),'created'),c=l.filter(x=>x.status=='Converted').length,w=o.filter(x=>x.status=='Won').length,x=o.filter(x=>x.status=='Lost').length,p=(a,b)=>b?Math.round(a/b*100)+'%':'0%';
+ return{h:['Metric','Value'],r:[['Total Leads',l.length],['Converted Leads',c],['Not Converted',l.length-c],['Lead Conversion Rate',p(c,l.length)],['Opportunities Won',w],['Opportunities Lost',x],['Win Rate',p(w,w+x)]],cl:['Converted','Not Converted'],cd:[c,l.length-c],lbl:'Lead Conversion',type:'doughnut'}}],
+user:['User Activity Report',()=>{const a=F2(D('auditLogs'),'time'),us=[...new Set(a.map(x=>x.uname))],n=(u,re)=>a.filter(x=>x.uname==u&&re.test(x.action)).length;
+ return{h:['User','Total Actions','Logins','Creates','Updates','Deletes'],r:us.map(u=>[u,a.filter(x=>x.uname==u).length,n(u,/^Login$/),n(u,/^Create/),n(u,/^Update/),n(u,/^Delete/)]),cl:us,cd:us.map(u=>a.filter(x=>x.uname==u).length),lbl:'Actions by User'}}],
+audit:['Audit Report',()=>{const a=F2(D('auditLogs'),'time').sort((x,y)=>y.id-x.id);return{h:['Date/Time','User','Action','Module','Record','Result','Details'],r:a.map(x=>[new Date(x.time).toLocaleString('en-IN'),x.uname,x.action,x.module,x.rec,x.result,x.details]),...cnt(a.map(x=>x.module)),lbl:'Events by Module'}}]};
+function reports(){const ad=me.role=='Admin',ow=['customer','lead','followup','opportunity','pipeline'].includes(RS.r);
+ if(RS.r=='audit'&&!ad)RS.r='customer';
+ $('#view').innerHTML=`<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2"><div><h4 class="fw-bold mb-0">Reports</h4><div class="text-muted small">Filter, review and export CRM data</div></div><button class="btn btn-success" onclick="csv()"><i class="bi bi-download"></i> Export CSV</button></div>
+ <div class="card shadow-sm mb-3"><div class="card-body"><div class="row g-2"><div class="col-md-4"><label class="form-label small">Report</label><select class="form-select" id="rr">${Object.entries(RP).filter(([k])=>k!='audit'||ad).map(([k,v])=>`<option value="${k}" ${k==RS.r?'selected':''}>${v[0]}</option>`).join('')}</select></div>
+ <div class="col-md-2"><label class="form-label small">From</label><input type="date" class="form-control" id="rfm" value="${RS.from}"></div><div class="col-md-2"><label class="form-label small">To</label><input type="date" class="form-control" id="rto" value="${RS.to}"></div>
+ <div class="col-md-3"><label class="form-label small">Owner</label><select class="form-select" id="rwo"><option value="">All owners</option>${allU().map(([a,b])=>`<option value="${a}" ${RS.owner==a?'selected':''}>${esc(b)}</option>`).join('')}</select></div></div></div></div><div id="rb"></div>`;
+ $('#rr').onchange=()=>{RS.r=$('#rr').value;repBody()};$('#rfm').oninput=()=>{RS.from=$('#rfm').value;repBody()};$('#rto').oninput=()=>{RS.to=$('#rto').value;repBody()};$('#rwo').onchange=()=>{RS.owner=$('#rwo').value;repBody()};repBody()}
+function repBody(){const[t,fn]=RP[RS.r];RES=fn();CH.forEach(x=>x.destroy());CH=[];
+ $('#rb').innerHTML=`<div class="row g-3"><div class="col-lg-4">${box(RES.lbl,'<div style="height:280px"><canvas id="rc"></canvas></div>')}</div><div class="col-lg-8"><div class="card shadow-sm"><div class="card-header bg-white fw-bold">${t} <span class="badge bg-secondary">${RES.r.length} rows</span></div><div class="table-responsive" style="max-height:430px"><table class="table table-sm table-hover mb-0"><thead><tr>${RES.h.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${RES.r.map(r=>`<tr>${r.map(v=>`<td>${esc(typeof v=='number'&&v>9999?fmt(v):v)}</td>`).join('')}</tr>`).join('')||`<tr><td colspan="${RES.h.length}" class="text-center text-muted py-4">No data for the selected filters.</td></tr>`}</tbody></table></div></div></div></div>`;
+ if(RES.r.length)mk('rc',RES.type||'bar',RES.cl,RES.cd,RES.lbl)}
+function csv(){const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',t=[RES.h,...RES.r].map(r=>r.map(q).join(',')).join('\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'}));a.download=RS.r+'-report-'+day()+'.csv';a.click();toast('CSV exported.')}
+
+/* ---------- shell ---------- */
+function bell(){const o=vis('followups').filter(f=>f.status=='Planned'&&f.date<=day()).sort((a,b)=>cmp(a.date,b.date));$('#bc').textContent=o.length;$('#bc').style.display=o.length?'':'none';
+ $('#bl').innerHTML=`<div class="fw-bold small px-2 pb-1">Follow-ups due or overdue</div>`+(o.slice(0,5).map(f=>`<a class="dropdown-item small text-wrap" href="#" onclick="go('followups');return false"><i class="bi bi-${TI[f.type]}"></i> ${esc(f.remarks)}<br><span class="${f.date<day()?'text-danger':'text-muted'}">${f.date}</span></a>`).join('')||'<div class="small text-muted px-2">You are all caught up.</div>')}
+function render(){CH.forEach(c=>c.destroy());CH=[];$$('#nav a').forEach(a=>a.classList.toggle('active',a.dataset.r==cur));$('#crumb').textContent=NAV.find(x=>x[0]==cur)[1];
+ cur=='dashboard'?dash():cur=='reports'?reports():list(cur);bell()}
+function go(r){if(!NAV.find(x=>x[0]==r&&x[3].includes(me.role)))r='dashboard';cur=r;$('#side').classList.remove('open');render();scrollTo(0,0)}
+function start(){$('#auth').classList.add('d-none');$('#app').classList.remove('d-none');
+ $('#nav').innerHTML=NAV.filter(x=>x[3].includes(me.role)).map(x=>`<a href="#" data-r="${x[0]}" onclick="go('${x[0]}');return false"><i class="bi bi-${x[2]}"></i>${x[1]}</a>`).join('');
+ $('#un').textContent=me.name;$('#ur').textContent=me.role;$('#ue').textContent=me.email;go(cur)}
+seed();
+if(me){const u=D('users').find(x=>x.id==me.id);if(u&&u.status=='Active'){me={id:u.id,name:u.name,email:u.email,role:u.role};cur='dashboard';start()}else{me=null;localStorage.removeItem('acx_currentUser');showAuth()}}else showAuth();
+</script>
+</body>
+</html>
